@@ -34,6 +34,21 @@ import kotlin.random.Random
 
 object SettingsManager {
 
+    /** Only ordinary profiles share the app's routing settings during network switching. */
+    fun isNetworkSwitchProfile(config: ProfileItem): Boolean =
+        config.configType != EConfigType.CUSTOM &&
+            config.configType != EConfigType.POLICYGROUP &&
+            config.configType != EConfigType.PROXYCHAIN &&
+            config.browserDialerMode.isNullOrEmpty()
+
+    fun getNetworkServer(isWifi: Boolean?): String? {
+        if (isWifi == null || !MmkvManager.decodeSettingsBool(AppConfig.PREF_NETWORK_AUTO_SWITCH)) return null
+        val key = if (isWifi) AppConfig.PREF_WIFI_SERVER else AppConfig.PREF_CELLULAR_SERVER
+        val guid = MmkvManager.decodeSettingsString(key)?.takeUnless { it.isBlank() } ?: return null
+        val profile = decodeServerConfig(guid) ?: return null
+        return guid.takeIf { isNetworkSwitchProfile(profile) }
+    }
+
     @Volatile
     private var runtimeSocksPort: Int? = null
 

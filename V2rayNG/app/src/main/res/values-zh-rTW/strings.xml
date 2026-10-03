@@ -559,4 +559,11 @@
     <string name="connection_test_empty_message">沒有詳細資訊</string>
     <string name="value_unknown">未知</string>
 
+    <string name="title_network_switch">依網路自動切換節點</string>
+    <string name="summary_network_switch">Wi-Fi 和行動數據分別使用綁定節點，斷網或停止時不自動啟動。手動選擇保持到下次網路變更。僅支援一般節點。</string>
+    <string name="title_wifi_node">Wi-Fi 節點</string>
+    <string name="title_cellular_node">行動數據節點</string>
+    <string name="network_node_unset">未設定（保持目前節點）</string>
+    <string name="network_node_missing">節點已失效，請重新選擇</string>
+    <string name="toast_network_settings_failed">無法讀取或儲存網路設定</string>
 </resources>

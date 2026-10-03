@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.system.OsConstants
@@ -34,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
@@ -51,7 +53,13 @@ object CoreServiceManager {
     private var currentConfig: ProfileItem? = null
     private var processFinder: XrayProcessFinder? = null
     private var browserDialer: IDialerService? = null
+    @Volatile
     private var networkMonitor: NetworkMonitor? = null
+    private var networkScope: CoroutineScope? = null
+    private val coreOperationLock = Any()
+    @Volatile
+    private var networkGeneration = 0L
+    private var runningGuid: String? = null
     private val connectionTestScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Volatile
@@ -121,20 +129,33 @@ object CoreServiceManager {
         ContextCompat.registerReceiver(service, mMsgReceive, mFilter, Utils.receiverFlags())
 
         currentVpnInterface = vpnInterface
+        networkScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val connectivity = service.getSystemService(ConnectivityManager::class.java)
+        val capabilities = connectivity?.activeNetwork?.let { connectivity.getNetworkCapabilities(it) }
+        val wifi = when {
+            capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> true
+            capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> false
+            else -> null
+        }
+        SettingsManager.getNetworkServer(wifi)?.let { MmkvManager.setSelectServer(it) }
         launchCore(service, vpnInterface)
         startNetworkMonitor(service)
     }
 
     @Throws(Exception::class)
-    private fun launchCore(service: Service, vpnInterface: ParcelFileDescriptor?, isReload: Boolean = false) {
-        val guid = MmkvManager.getSelectServer() ?: error("No server selected")
+    private fun launchCore(
+        service: Service,
+        vpnInterface: ParcelFileDescriptor?,
+        isReload: Boolean = false,
+        guid: String = MmkvManager.getSelectServer() ?: error("No server selected"),
+        preparedContent: String? = null
+    ) {
         val config = MmkvManager.decodeServerConfig(guid) ?: error("Failed to decode server config")
 
-        LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting core loop for ${config.remarks}")
-        val result = CoreConfigManager.getV2rayConfig(service, guid)
-        LogUtil.d(AppConfig.TAG, result.content)
-        if (!result.status) {
-            error(result.errorMessage.ifBlank { "Failed to get V2Ray config" })
+        LogUtil.i(AppConfig.TAG, "StartCore-Manager: Starting core loop guid=$guid")
+        val content = preparedContent ?: CoreConfigManager.getV2rayConfig(service, guid).let { result ->
+            if (!result.status) error(result.errorMessage.ifBlank { "Failed to get V2Ray config" })
+            result.content
         }
 
         currentConfig = config
@@ -153,7 +174,7 @@ object CoreServiceManager {
         if (dialerAddr.isNotNullEmpty()) {
             CoreNativeManager.reconcileBrowserDialer(dialerAddr)
         }
-        coreController.startLoop(result.content, tunFd)
+        coreController.startLoop(content, tunFd)
 
         if (!isRunning()) {
             error("Core failed to start")
@@ -177,6 +198,7 @@ object CoreServiceManager {
             else -> {}
         }
 
+        runningGuid = guid
         if (!isReload) {
             MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
         }
@@ -193,17 +215,24 @@ object CoreServiceManager {
         connectionTestScope.coroutineContext.cancelChildren()
         val service = getService() ?: return false
 
+        networkGeneration++
         networkMonitor?.unregister()
         networkMonitor = null
+        val stoppingScope = networkScope
+        networkScope = null
+        stoppingScope?.coroutineContext?.cancelChildren()
         currentVpnInterface = null
 
-        if (isRunning()) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    coreController.stopLoop()
-                } catch (e: Exception) {
-                    LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to stop V2Ray loop", e)
+        stoppingScope?.launch {
+            try {
+                synchronized(coreOperationLock) {
+                    if (isRunning()) coreController.stopLoop()
+                    runningGuid = null
                 }
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Core stop mode=${MmkvManager.decodeSettingsString(AppConfig.PREF_MODE)} guid=$runningGuid failed", e)
+            } finally {
+                stoppingScope.cancel()
             }
         }
 
@@ -232,15 +261,30 @@ object CoreServiceManager {
      * and root mode as well, not just behind the VPN interface.
      */
     private fun startNetworkMonitor(service: Service) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return
         if (networkMonitor != null) return
 
         val connectivity = service.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
-        networkMonitor = NetworkMonitor(
+        val ownerScope = networkScope ?: return
+        lateinit var monitor: NetworkMonitor
+        monitor = NetworkMonitor(
             connectivity = connectivity,
             onUnderlyingNetworksChanged = { networks -> serviceControl?.get()?.setUnderlyingNetworks(networks) },
-            onHandover = { reloadCore() },
-        ).also { it.register() }
+            onHandover = { wifi, recover ->
+                val generation = ++networkGeneration
+                ownerScope.launch {
+                    synchronized(coreOperationLock) {
+                        if (networkMonitor === monitor && generation == networkGeneration && isRunning()) {
+                            val target = SettingsManager.getNetworkServer(wifi)
+                            if ((target != null && target != runningGuid) || recover) {
+                                reloadCore(target, monitor, generation)
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        networkMonitor = monitor
+        monitor.register()
     }
 
     /**
@@ -252,7 +296,7 @@ object CoreServiceManager {
      *
      * @return True if the core is running again.
      */
-    private fun reloadCore(): Boolean {
+    private fun reloadCore(targetGuid: String?, monitor: NetworkMonitor, generation: Long): Boolean {
         if (isReloading) return false
         val service = getService() ?: return false
         if (!isRunning()) return false
@@ -264,15 +308,35 @@ object CoreServiceManager {
             connectionTestScope.coroutineContext.cancelChildren()
             LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core reload start...")
 
+            val previousGuid = runningGuid ?: return false
+            val guid = targetGuid ?: previousGuid
+            // Build before stopping the working core. Routing remains owned by CoreConfigManager.
+            val result = CoreConfigManager.getV2rayConfig(service, guid)
+            check(result.status) { "Invalid network-switch profile" }
+            if (networkMonitor !== monitor || generation != networkGeneration || !isRunning()) return false
             coreController.stopLoop()
-            launchCore(service, tunFd, isReload = true)
+            try {
+                launchCore(service, tunFd, isReload = true, guid = guid, preparedContent = result.content)
+                if (networkMonitor === monitor && generation == networkGeneration) {
+                    MmkvManager.setSelectServer(guid)
+                    MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_SUCCESS, "")
+                }
+            } catch (e: Exception) {
+                if (networkMonitor === monitor && generation == networkGeneration) {
+                    if (isRunning()) coreController.stopLoop()
+                    launchCore(service, tunFd, isReload = true, guid = previousGuid)
+                }
+                throw e
+            }
 
             LogUtil.i(AppConfig.TAG, "StartCore-Manager: Core reload finished")
             true
         } catch (e: Exception) {
-            val message = e.message?.takeUnless { it.isBlank() } ?: e.javaClass.simpleName
-            LogUtil.e(AppConfig.TAG, "StartCore-Manager: Failed to reload core: $message", e)
-            MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, message)
+            LogUtil.e(AppConfig.TAG, "Core handover mode=${MmkvManager.decodeSettingsString(AppConfig.PREF_MODE)} guid=$targetGuid reload failed", e)
+            if (!isRunning()) {
+                MessageHelper.sendMsg2UI(service, AppConfig.MSG_STATE_START_FAILURE, "")
+                serviceControl?.get()?.stopService()
+            }
             false
         } finally {
             isReloading = false

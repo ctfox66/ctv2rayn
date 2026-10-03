@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - master
+      - main
+      - feat/wifi-node-switch
 
 permissions:
   contents: write
@@ -87,13 +89,15 @@ jobs:
         java-version: '21'
 
     - name: Decode Keystore
+      if: github.repository == '2dust/v2rayNG'
       uses: timheuer/base64-to-file@v2.0.0
       id: android_keystore
       with:
         fileName: "android_keystore.jks"
         encodedString: ${{ secrets.APP_KEYSTORE_BASE64 }}
 
-    - name: Build APK
+    - name: Build release APK
+      if: github.repository == '2dust/v2rayNG'
       run: |
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
@@ -101,6 +105,32 @@ jobs:
         ./gradlew licenseFdroidReleaseReport
         ./gradlew assembleRelease -Pandroid.injected.signing.store.file=${{ steps.android_keystore.outputs.filePath }} -Pandroid.injected.signing.store.password=${{ secrets.APP_KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.APP_KEYSTORE_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.APP_KEY_PASSWORD }}
     
+    - name: Test and build debug APK (forks, no signing secrets)
+      if: github.repository != '2dust/v2rayNG'
+      run: |
+        cd "${{ github.workspace }}/V2rayNG"
+        echo "sdk.dir=${ANDROID_HOME}" > local.properties
+        chmod 755 gradlew
+        ./gradlew :app:testPlaystoreDebugUnitTest --tests 'com.v2ray.ang.service.NetworkHandoverStateTest' --tests 'com.v2ray.ang.handler.NetworkSwitchSettingsTest' --tests 'com.v2ray.ang.ui.settings.NetworkSwitchSettingsStateTest'
+        ./gradlew :app:testPlaystoreDebugUnitTest :app:compilePlaystoreDebugKotlin :app:assemblePlaystoreDebug :app:lintPlaystoreDebug
+
+    - name: Upload debug APK
+      uses: actions/upload-artifact@v7
+      if: github.repository != '2dust/v2rayNG'
+      with:
+        name: wifi-switch-debug-apk
+        path: V2rayNG/app/build/outputs/apk/playstore/debug/*.apk
+        if-no-files-found: error
+
+    - name: Upload test and lint reports
+      uses: actions/upload-artifact@v7
+      if: always() && github.repository != '2dust/v2rayNG'
+      with:
+        name: validation-reports
+        path: |
+          V2rayNG/app/build/reports/tests/
+          V2rayNG/app/build/reports/lint-results-*.html
+
     - name: Upload arm64-v8a APK
       uses: actions/upload-artifact@v7
       if: ${{  success() }}
@@ -132,7 +162,7 @@ jobs:
   sign-and-release:
     needs: build
     runs-on: ubuntu-26.04
-    if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+    if: github.repository == '2dust/v2rayNG' && github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
 
     steps:
       - name: Download APK artifacts

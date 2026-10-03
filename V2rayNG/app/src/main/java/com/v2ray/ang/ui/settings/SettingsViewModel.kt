@@ -5,6 +5,11 @@ import android.content.Intent
 import android.provider.Settings
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import androidx.lifecycle.viewModelScope
+import com.v2ray.ang.handler.MmkvManager
+import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.util.LogUtil
+import kotlinx.coroutines.launch
 import com.v2ray.ang.root.RootManager
 import com.v2ray.ang.ui.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +18,53 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
 class SettingsViewModel(application: Application) : BaseViewModel(application) {
+
+    private val _networkSettings = MutableStateFlow(NetworkSwitchSettingsState())
+    val networkSettings = _networkSettings.asStateFlow()
+
+    suspend fun refreshNetworkSettings() = withContext(Dispatchers.IO) {
+        try {
+            val profiles = MmkvManager.decodeAllServerList().mapNotNull { guid ->
+                MmkvManager.decodeServerConfig(guid)?.takeIf(SettingsManager::isNetworkSwitchProfile)
+                    ?.let { NetworkSwitchSettingsState.Profile(guid, it.remarks) }
+            }
+            _networkSettings.value = NetworkSwitchSettingsState(
+                enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_NETWORK_AUTO_SWITCH),
+                wifiGuid = MmkvManager.decodeSettingsString(AppConfig.PREF_WIFI_SERVER).orEmpty(),
+                cellularGuid = MmkvManager.decodeSettingsString(AppConfig.PREF_CELLULAR_SERVER).orEmpty(),
+                profiles = profiles
+            )
+        } catch (e: Exception) {
+            LogUtil.e(AppConfig.TAG, "Settings: load network bindings failed", e)
+            toastError(R.string.toast_network_settings_failed)
+        }
+    }
+
+    fun onNetworkSettingsAction(action: NetworkSwitchSettingsAction) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val state = _networkSettings.value
+                val updated = state.apply(action) ?: return@withContext
+                val (key, value) = when (action) {
+                    is NetworkSwitchSettingsAction.Enable -> AppConfig.PREF_NETWORK_AUTO_SWITCH to action.enabled.toString()
+                    is NetworkSwitchSettingsAction.Select ->
+                        (if (action.wifi) AppConfig.PREF_WIFI_SERVER else AppConfig.PREF_CELLULAR_SERVER) to action.guid
+                }
+                try {
+                    val saved = if (action is NetworkSwitchSettingsAction.Enable) {
+                        MmkvManager.encodeSettings(key, action.enabled)
+                    } else {
+                        MmkvManager.encodeSettings(key, value)
+                    }
+                    check(saved) { "MMKV write failed" }
+                    _networkSettings.value = updated
+                } catch (e: Exception) {
+                    LogUtil.e(AppConfig.TAG, "Settings: save network binding failed", e)
+                    toastError(R.string.toast_network_settings_failed)
+                }
+            }
+        }
+    }
 
     private val _systemVpnSettingsAvailable = MutableStateFlow(false)
     val systemVpnSettingsAvailable = _systemVpnSettingsAvailable.asStateFlow()

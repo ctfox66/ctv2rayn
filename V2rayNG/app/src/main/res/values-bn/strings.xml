@@ -561,4 +561,11 @@
     <string name="connection_test_empty_message">কোনো বিবরণ পাওয়া যায়নি</string>
     <string name="value_unknown">অজানা</string>
 
+    <string name="title_network_switch">নেটওয়ার্ক অনুযায়ী স্বয়ংক্রিয় সার্ভার পরিবর্তন</string>
+    <string name="summary_network_switch">Wi-Fi বা মোবাইল ডেটার জন্য নির্ধারিত সার্ভার ব্যবহার করুন। নেটওয়ার্ক বিচ্ছিন্ন বা বন্ধ থাকলে নিজে থেকে চালু হবে না। পরবর্তী নেটওয়ার্ক পরিবর্তন পর্যন্ত হাতে বাছাই কার্যকর। শুধু সাধারণ সার্ভার।</string>
+    <string name="title_wifi_node">Wi-Fi সার্ভার</string>
+    <string name="title_cellular_node">মোবাইল ডেটা সার্ভার</string>
+    <string name="network_node_unset">নির্ধারিত নয় (বর্তমান সার্ভার রাখুন)</string>
+    <string name="network_node_missing">সার্ভার নেই — আবার বাছাই করুন</string>
+    <string name="toast_network_settings_failed">নেটওয়ার্ক সেটিংস পড়া বা সংরক্ষণ করা যায়নি</string>
 </resources>

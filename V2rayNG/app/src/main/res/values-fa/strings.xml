@@ -561,4 +561,11 @@
     <string name="connection_test_empty_message">جزئیاتی در دسترس نیست</string>
     <string name="value_unknown">ناشناخته</string>
 
+    <string name="title_network_switch">تعویض خودکار سرور بر اساس شبکه</string>
+    <string name="summary_network_switch">استفاده از سرور تعیین‌شده برای Wi-Fi یا داده همراه. هنگام قطع شبکه یا توقف، خودکار شروع نمی‌شود. انتخاب دستی تا تغییر شبکه حفظ می‌شود. فقط سرورهای معمولی.</string>
+    <string name="title_wifi_node">سرور Wi-Fi</string>
+    <string name="title_cellular_node">سرور داده همراه</string>
+    <string name="network_node_unset">تعیین نشده (حفظ سرور فعلی)</string>
+    <string name="network_node_missing">سرور در دسترس نیست — دوباره انتخاب کنید</string>
+    <string name="toast_network_settings_failed">خواندن یا ذخیره تنظیمات شبکه ممکن نشد</string>
 </resources>

@@ -569,4 +569,11 @@
     <string name="connection_test_empty_message">لا تتوفر تفاصيل</string>
     <string name="value_unknown">غير معروف</string>
 
+    <string name="title_network_switch">تبديل الخادم تلقائيًا حسب الشبكة</string>
+    <string name="summary_network_switch">استخدام الخادم المحدد لشبكة Wi-Fi أو بيانات الهاتف. لا يبدأ تلقائيًا عند انقطاع الشبكة أو بعد الإيقاف. يبقى الاختيار اليدوي حتى تغيير الشبكة. للخوادم العادية فقط.</string>
+    <string name="title_wifi_node">خادم Wi-Fi</string>
+    <string name="title_cellular_node">خادم بيانات الهاتف</string>
+    <string name="network_node_unset">غير محدد (الاحتفاظ بالخادم الحالي)</string>
+    <string name="network_node_missing">الخادم غير متاح — اختر مجددًا</string>
+    <string name="toast_network_settings_failed">تعذر قراءة إعدادات الشبكة أو حفظها</string>
 </resources>

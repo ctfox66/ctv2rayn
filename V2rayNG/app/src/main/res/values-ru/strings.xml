@@ -565,4 +565,11 @@
     <string name="connection_test_empty_message">подробности отсутствуют</string>
     <string name="value_unknown">неизвестно</string>
 
+    <string name="title_network_switch">Автосмена сервера по сети</string>
+    <string name="summary_network_switch">Использовать назначенный сервер для Wi-Fi или мобильной сети. Не запускать при отсутствии сети или после остановки. Ручной выбор действует до смены сети. Только обычные серверы.</string>
+    <string name="title_wifi_node">Сервер Wi-Fi</string>
+    <string name="title_cellular_node">Сервер мобильной сети</string>
+    <string name="network_node_unset">Не задан (сохранить текущий сервер)</string>
+    <string name="network_node_missing">Сервер недоступен — выберите заново</string>
+    <string name="toast_network_settings_failed">Не удалось прочитать или сохранить настройки сети</string>
 </resources>

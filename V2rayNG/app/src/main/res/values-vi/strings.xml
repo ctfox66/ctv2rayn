@@ -559,4 +559,11 @@
     <string name="connection_test_empty_message">không có thông tin chi tiết</string>
     <string name="value_unknown">không xác định</string>
 
+    <string name="title_network_switch">Tự động chuyển máy chủ theo mạng</string>
+    <string name="summary_network_switch">Dùng máy chủ đã chọn cho Wi-Fi hoặc dữ liệu di động. Không tự khởi động khi mất mạng hoặc đã dừng. Lựa chọn thủ công được giữ đến khi mạng thay đổi. Chỉ hỗ trợ máy chủ thông thường.</string>
+    <string name="title_wifi_node">Máy chủ Wi-Fi</string>
+    <string name="title_cellular_node">Máy chủ dữ liệu di động</string>
+    <string name="network_node_unset">Chưa đặt (giữ máy chủ hiện tại)</string>
+    <string name="network_node_missing">Máy chủ không khả dụng — chọn lại</string>
+    <string name="toast_network_settings_failed">Không thể đọc hoặc lưu cài đặt mạng</string>
 </resources>

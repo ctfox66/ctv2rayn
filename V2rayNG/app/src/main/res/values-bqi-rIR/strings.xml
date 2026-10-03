@@ -561,4 +561,11 @@
     <string name="connection_test_empty_message">دووسمندی نؽ</string>
     <string name="value_unknown">نا موشخس</string>
 
+    <string name="title_network_switch">عوض کردن خودکار سرور بر پایه شبکه</string>
+    <string name="summary_network_switch">سرور تعیین‌شده سی Wi-Fi یا داده همراه به کار بره. موقع قطع شبکه یا توقف، خودکار شروع نیبو. انتخاب دستی تا عوض شدن شبکه می‌مونه. فقط سرور معمولی.</string>
+    <string name="title_wifi_node">سرور Wi-Fi</string>
+    <string name="title_cellular_node">سرور داده همراه</string>
+    <string name="network_node_unset">تعیین نیبیده (سرور فعلی بمونه)</string>
+    <string name="network_node_missing">سرور در دسترس نی — دوباره انتخاب کنین</string>
+    <string name="toast_network_settings_failed">تنظیمات شبکه خونده یا ذخیره نیبید</string>
 </resources>

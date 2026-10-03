@@ -561,4 +561,11 @@
     <string name="connection_test_empty_message">no details available</string>
     <string name="value_unknown">unknown</string>
 
+    <string name="title_network_switch">Automatic network switching</string>
+    <string name="summary_network_switch">Use a bound node on Wi-Fi or mobile data. No automatic start when disconnected or stopped. Manual selection lasts until the next network change. Ordinary nodes only.</string>
+    <string name="title_wifi_node">Wi-Fi node</string>
+    <string name="title_cellular_node">Mobile data node</string>
+    <string name="network_node_unset">Not set (keep current node)</string>
+    <string name="network_node_missing">Node unavailable — select again</string>
+    <string name="toast_network_settings_failed">Could not load or save network settings</string>
 </resources>
