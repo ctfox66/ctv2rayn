@@ -42,7 +42,15 @@ object CoreConfigManager {
             if (configContext.isCustom) {
                 return buildV2rayCustomConfig(configContext)
             }
-            return toConfigResult(configContext, buildUnifiedConfig(configContext))
+            val v2rayConfig = buildUnifiedConfig(configContext)
+            if (SettingsManager.isEasyTierEnabled()) {
+                EasyTierOutboundBuilder.injectIntoV2rayConfig(
+                    v2rayConfig,
+                    SettingsManager.getEasyTierSocksPort(),
+                    SettingsManager.getEasyTierRouteCidrs()
+                )
+            }
+            return toConfigResult(configContext, v2rayConfig)
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to get V2ray config", e)
             return ConfigResult(
@@ -120,6 +128,14 @@ object CoreConfigManager {
                     json.remove("policy")
                 }
             }
+        }
+
+        if (SettingsManager.isEasyTierEnabled()) {
+            EasyTierOutboundBuilder.injectIntoJson(
+                json,
+                SettingsManager.getEasyTierSocksPort(),
+                SettingsManager.getEasyTierRouteCidrs()
+            )
         }
 
         if (!needTun()) {

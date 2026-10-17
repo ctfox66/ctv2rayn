@@ -430,6 +430,49 @@ object SettingsManager {
     }
 
     /**
+     * Check if the EasyTier mesh VPN dataplane is enabled.
+     */
+    fun isEasyTierEnabled(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_EASYTIER_ENABLED, false)
+    }
+
+    fun isEasyTierIpv6Enabled(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_IPV6_ENABLED) == true
+    }
+
+    fun getEasyTierNetworkName(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_NETWORK_NAME).orEmpty().trim()
+    }
+
+    fun getEasyTierNetworkSecret(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_NETWORK_SECRET).orEmpty().trim()
+    }
+
+    fun getEasyTierPeers(): List<String> {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_PEERS)
+            .orEmpty()
+            .split('\n', ',', ';')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+    }
+
+    fun getEasyTierSocksPort(): Int {
+        return Utils.parseInt(
+            MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_SOCKS_PORT),
+            AppConfig.PORT_EASYTIER_SOCKS5.toInt()
+        )
+    }
+
+    fun getEasyTierRouteCidrs(): List<String> {
+        val raw = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_ROUTE_CIDRS)
+            ?.takeIf { it.isNotBlank() }
+            ?: AppConfig.EASYTIER_DEFAULT_ROUTE_CIDRS
+        return raw.split(',', '\n', ';')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+    }
+
+    /**
      * Check if VPN mode is enabled.
      * @return True if VPN mode is enabled, false otherwise.
      */

@@ -562,6 +562,16 @@
     <string name="value_unknown">অজানা</string>
 
     <string name="title_network_switch">নেটওয়ার্ক অনুযায়ী স্বয়ংক্রিয় সার্ভার পরিবর্তন</string>
+    <string name="title_easytier_settings">মেশ ভিপিএন (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">মেশ ভিপিএন সক্ষম করুন</string>
+    <string name="summary_pref_easytier_enabled">অন্তর্নির্মিত SOCKS5 ডেটাপ্লেনের মাধ্যমে EasyTier মেশ নেটওয়ার্কে যোগ দিন; মেশ CIDR গুলো Xray দ্বারা রাউট করা হয়। পরিবর্তন প্রয়োগ করতে সংযোগ পুনরায় চালু করুন।</string>
+    <string name="title_pref_easytier_network_name">নেটওয়ার্কের নাম</string>
+    <string name="title_pref_easytier_network_secret">নেটওয়ার্ক সিক্রেট</string>
+    <string name="title_pref_easytier_peers">পিয়ার নোড</string>
+    <string name="title_pref_easytier_socks_port">EasyTier SOCKS5 পোর্ট</string>
+    <string name="title_pref_easytier_route_cidrs">রাউট করা CIDR</string>
+    <string name="toast_invalid_easytier_socks_port">অবৈধ পোর্ট নম্বর</string>
+    <string name="toast_easytier_settings_failed">মেশ ভিপিএন সেটিংস সংরক্ষণ করা যায়নি</string>
     <string name="summary_network_switch">Wi-Fi বা মোবাইল ডেটার জন্য নির্ধারিত সার্ভার ব্যবহার করুন। নেটওয়ার্ক বিচ্ছিন্ন বা বন্ধ থাকলে নিজে থেকে চালু হবে না। পরবর্তী নেটওয়ার্ক পরিবর্তন পর্যন্ত হাতে বাছাই কার্যকর। শুধু সাধারণ সার্ভার।</string>
     <string name="title_wifi_node">Wi-Fi সার্ভার</string>
     <string name="title_cellular_node">মোবাইল ডেটা সার্ভার</string>

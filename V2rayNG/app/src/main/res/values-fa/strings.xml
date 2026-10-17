@@ -562,6 +562,16 @@
     <string name="value_unknown">ناشناخته</string>
 
     <string name="title_network_switch">تعویض خودکار سرور بر اساس شبکه</string>
+    <string name="title_easytier_settings">VPN مش (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">فعال‌سازی VPN مش</string>
+    <string name="summary_pref_easytier_enabled">پیوستن به شبکه مش EasyTier از طریق کانال SOCKS5 داخلی؛ CIDRهای شبکه مش توسط Xray مسیریابی می‌شوند. برای اعمال تغییرات، اتصال را دوباره راه‌اندازی کنید.</string>
+    <string name="title_pref_easytier_network_name">نام شبکه</string>
+    <string name="title_pref_easytier_network_secret">رمز شبکه</string>
+    <string name="title_pref_easytier_peers">گره‌های همتا</string>
+    <string name="title_pref_easytier_socks_port">پورت SOCKS5 ایزی‌تیر</string>
+    <string name="title_pref_easytier_route_cidrs">CIDRهای مسیریابی‌شده</string>
+    <string name="toast_invalid_easytier_socks_port">شماره پورت نامعتبر است</string>
+    <string name="toast_easytier_settings_failed">ذخیره تنظیمات VPN مش ناموفق بود</string>
     <string name="summary_network_switch">استفاده از سرور تعیین‌شده برای Wi-Fi یا داده همراه. هنگام قطع شبکه یا توقف، خودکار شروع نمی‌شود. انتخاب دستی تا تغییر شبکه حفظ می‌شود. فقط سرورهای معمولی.</string>
     <string name="title_wifi_node">سرور Wi-Fi</string>
     <string name="title_cellular_node">سرور داده همراه</string>

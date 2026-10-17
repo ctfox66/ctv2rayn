@@ -1,0 +1,39 @@
+[package]
+name = "easytier-jni"
+version = "0.1.0"
+edition = "2021"
+description = "Minimal Android JNI wrapper around the EasyTier mesh VPN library"
+publish = false
+
+[lib]
+name = "easytier"
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+android_logger = "0.15"
+jni = { version = "0.21", default-features = false }
+log = "0.4"
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[dependencies.easytier]
+git = "https://github.com/EasyTier/EasyTier"
+rev = "e25c6bdd0ca0156c8ae6e11b1d470c7091d3325f"
+default-features = false
+features = [
+    "socks5",
+    "tcp-hole-punch",
+    "endpoint-discovery",
+]
+
+[dependencies.easytier-core]
+git = "https://github.com/EasyTier/EasyTier"
+rev = "e25c6bdd0ca0156c8ae6e11b1d470c7091d3325f"
+default-features = false
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true

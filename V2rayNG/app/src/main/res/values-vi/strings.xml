@@ -560,6 +560,16 @@
     <string name="value_unknown">không xác định</string>
 
     <string name="title_network_switch">Tự động chuyển máy chủ theo mạng</string>
+    <string name="title_easytier_settings">Mạng lưới VPN (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">Bật mạng lưới VPN</string>
+    <string name="summary_pref_easytier_enabled">Tham gia mạng EasyTier qua lớp dữ liệu SOCKS5 nhúng; các CIDR của mạng lưới được Xray chuyển tiếp. Khởi động lại kết nối để áp dụng thay đổi.</string>
+    <string name="title_pref_easytier_network_name">Tên mạng</string>
+    <string name="title_pref_easytier_network_secret">Mã mạng</string>
+    <string name="title_pref_easytier_peers">Nút ngang hàng</string>
+    <string name="title_pref_easytier_socks_port">Cổng SOCKS5 EasyTier</string>
+    <string name="title_pref_easytier_route_cidrs">Các CIDR được định tuyến</string>
+    <string name="toast_invalid_easytier_socks_port">Số cổng không hợp lệ</string>
+    <string name="toast_easytier_settings_failed">Không thể lưu cài đặt mạng lưới VPN</string>
     <string name="summary_network_switch">Dùng máy chủ đã chọn cho Wi-Fi hoặc dữ liệu di động. Không tự khởi động khi mất mạng hoặc đã dừng. Lựa chọn thủ công được giữ đến khi mạng thay đổi. Chỉ hỗ trợ máy chủ thông thường.</string>
     <string name="title_wifi_node">Máy chủ Wi-Fi</string>
     <string name="title_cellular_node">Máy chủ dữ liệu di động</string>

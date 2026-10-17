@@ -22,6 +22,60 @@ class SettingsViewModel(application: Application) : BaseViewModel(application) {
     private val _networkSettings = MutableStateFlow(NetworkSwitchSettingsState())
     val networkSettings = _networkSettings.asStateFlow()
 
+    private val _easyTierSettings = MutableStateFlow(EasyTierSettingsState())
+    val easyTierSettings = _easyTierSettings.asStateFlow()
+
+    suspend fun refreshEasyTierSettings() = withContext(Dispatchers.IO) {
+        _easyTierSettings.value = EasyTierSettingsState(
+            enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_EASYTIER_ENABLED, false),
+            networkName = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_NETWORK_NAME).orEmpty(),
+            networkSecret = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_NETWORK_SECRET).orEmpty(),
+            peers = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_PEERS).orEmpty(),
+            socksPort = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_SOCKS_PORT).orEmpty(),
+            routeCidrs = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_ROUTE_CIDRS).orEmpty()
+        )
+    }
+
+    fun onEasyTierSettingsAction(action: EasyTierSettingsAction) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                if (action is EasyTierSettingsAction.UpdateSocksPort &&
+                    !isValidEasyTierPortInput(action.value)
+                ) {
+                    toastError(R.string.toast_invalid_easytier_socks_port)
+                    return@withContext
+                }
+                val updated = _easyTierSettings.value.apply(action)
+                val (key, value) = when (action) {
+                    is EasyTierSettingsAction.Enable -> AppConfig.PREF_EASYTIER_ENABLED to action.enabled.toString()
+                    is EasyTierSettingsAction.UpdateNetworkName -> AppConfig.PREF_EASYTIER_NETWORK_NAME to action.value
+                    is EasyTierSettingsAction.UpdateNetworkSecret -> AppConfig.PREF_EASYTIER_NETWORK_SECRET to action.value
+                    is EasyTierSettingsAction.UpdatePeers -> AppConfig.PREF_EASYTIER_PEERS to action.value
+                    is EasyTierSettingsAction.UpdateSocksPort -> AppConfig.PREF_EASYTIER_SOCKS_PORT to action.value
+                    is EasyTierSettingsAction.UpdateRouteCidrs -> AppConfig.PREF_EASYTIER_ROUTE_CIDRS to action.value
+                }
+                try {
+                    val saved = if (action is EasyTierSettingsAction.Enable) {
+                        MmkvManager.encodeSettings(key, action.enabled)
+                    } else {
+                        MmkvManager.encodeSettings(key, value)
+                    }
+                    check(saved) { "MMKV write failed" }
+                    _easyTierSettings.value = updated
+                } catch (e: Exception) {
+                    LogUtil.e(AppConfig.TAG, "Settings: save easytier setting failed", e)
+                    toastError(R.string.toast_easytier_settings_failed)
+                }
+            }
+        }
+    }
+
+    private fun isValidEasyTierPortInput(value: String): Boolean {
+        if (value.isBlank()) return true
+        val port = value.trim().toIntOrNull() ?: return false
+        return port in 1..65535
+    }
+
     suspend fun refreshNetworkSettings() = withContext(Dispatchers.IO) {
         try {
             val profiles = MmkvManager.decodeAllServerList().mapNotNull { guid ->

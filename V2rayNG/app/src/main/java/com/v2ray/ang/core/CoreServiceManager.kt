@@ -28,6 +28,7 @@ import com.v2ray.ang.handler.SpeedtestManager
 import com.v2ray.ang.helper.MessageHelper
 import com.v2ray.ang.service.DialerNativeService
 import com.v2ray.ang.service.DialerWebviewService
+import com.v2ray.ang.service.EasyTierManager
 import com.v2ray.ang.service.NetworkMonitor
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
@@ -138,6 +139,7 @@ object CoreServiceManager {
             else -> null
         }
         SettingsManager.getNetworkServer(wifi)?.let { MmkvManager.setSelectServer(it) }
+        EasyTierManager.start()
         launchCore(service, vpnInterface)
         startNetworkMonitor(service)
     }
@@ -213,6 +215,7 @@ object CoreServiceManager {
      */
     fun stopCoreLoop(): Boolean {
         connectionTestScope.coroutineContext.cancelChildren()
+        EasyTierManager.stop()
         val service = getService() ?: return false
 
         networkGeneration++

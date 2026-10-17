@@ -570,6 +570,16 @@
     <string name="value_unknown">غير معروف</string>
 
     <string name="title_network_switch">تبديل الخادم تلقائيًا حسب الشبكة</string>
+    <string name="title_easytier_settings">VPN شبكي (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">تمكين VPN الشبكي</string>
+    <string name="summary_pref_easytier_enabled">الانضمام إلى شبكة EasyTier عبر قناة SOCKS5 المدمجة؛ تُوجَّه CIDRs الشبكة عبر Xray. أعد تشغيل الاتصال لتطبيق التغييرات.</string>
+    <string name="title_pref_easytier_network_name">اسم الشبكة</string>
+    <string name="title_pref_easytier_network_secret">كلمة سر الشبكة</string>
+    <string name="title_pref_easytier_peers">العقد النظيرة</string>
+    <string name="title_pref_easytier_socks_port">منفذ SOCKS5 لـ EasyTier</string>
+    <string name="title_pref_easytier_route_cidrs">نطاقات CIDR الموجهة</string>
+    <string name="toast_invalid_easytier_socks_port">رقم منفذ غير صالح</string>
+    <string name="toast_easytier_settings_failed">فشل حفظ إعدادات VPN الشبكي</string>
     <string name="summary_network_switch">استخدام الخادم المحدد لشبكة Wi-Fi أو بيانات الهاتف. لا يبدأ تلقائيًا عند انقطاع الشبكة أو بعد الإيقاف. يبقى الاختيار اليدوي حتى تغيير الشبكة. للخوادم العادية فقط.</string>
     <string name="title_wifi_node">خادم Wi-Fi</string>
     <string name="title_cellular_node">خادم بيانات الهاتف</string>

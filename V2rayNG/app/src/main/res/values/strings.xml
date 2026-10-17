@@ -562,6 +562,16 @@
     <string name="value_unknown">unknown</string>
 
     <string name="title_network_switch">Automatic network switching</string>
+    <string name="title_easytier_settings">Mesh VPN (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">Enable mesh VPN</string>
+    <string name="summary_pref_easytier_enabled">Join an EasyTier mesh network through the embedded SOCKS5 dataplane; mesh CIDRs are routed to it by Xray. Restart the connection to apply changes.</string>
+    <string name="title_pref_easytier_network_name">Network name</string>
+    <string name="title_pref_easytier_network_secret">Network secret</string>
+    <string name="title_pref_easytier_peers">Peer nodes</string>
+    <string name="title_pref_easytier_socks_port">EasyTier SOCKS5 port</string>
+    <string name="title_pref_easytier_route_cidrs">Routed CIDRs</string>
+    <string name="toast_invalid_easytier_socks_port">Invalid port number</string>
+    <string name="toast_easytier_settings_failed">Failed to save mesh VPN settings</string>
     <string name="summary_network_switch">Use a bound node on Wi-Fi or mobile data. No automatic start when disconnected or stopped. Manual selection lasts until the next network change. Ordinary nodes only.</string>
     <string name="title_wifi_node">Wi-Fi node</string>
     <string name="title_cellular_node">Mobile data node</string>

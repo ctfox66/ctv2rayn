@@ -566,6 +566,16 @@
     <string name="value_unknown">неизвестно</string>
 
     <string name="title_network_switch">Автосмена сервера по сети</string>
+    <string name="title_easytier_settings">Mesh VPN (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">Включить Mesh VPN</string>
+    <string name="summary_pref_easytier_enabled">Подключение к mesh-сети EasyTier через встроенный SOCKS5-канал; CIDR mesh-сети маршрутизируются через Xray. Перезапустите подключение, чтобы применить изменения.</string>
+    <string name="title_pref_easytier_network_name">Имя сети</string>
+    <string name="title_pref_easytier_network_secret">Секрет сети</string>
+    <string name="title_pref_easytier_peers">Узлы-пиры</string>
+    <string name="title_pref_easytier_socks_port">Порт SOCKS5 EasyTier</string>
+    <string name="title_pref_easytier_route_cidrs">Маршрутизируемые CIDR</string>
+    <string name="toast_invalid_easytier_socks_port">Неверный номер порта</string>
+    <string name="toast_easytier_settings_failed">Не удалось сохранить настройки Mesh VPN</string>
     <string name="summary_network_switch">Использовать назначенный сервер для Wi-Fi или мобильной сети. Не запускать при отсутствии сети или после остановки. Ручной выбор действует до смены сети. Только обычные серверы.</string>
     <string name="title_wifi_node">Сервер Wi-Fi</string>
     <string name="title_cellular_node">Сервер мобильной сети</string>

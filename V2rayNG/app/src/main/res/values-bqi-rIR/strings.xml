@@ -562,6 +562,16 @@
     <string name="value_unknown">نا موشخس</string>
 
     <string name="title_network_switch">عوض کردن خودکار سرور بر پایه شبکه</string>
+    <string name="title_easytier_settings">وی‌پی‌ان مش (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">فعال کردن وی‌پی‌ان مش</string>
+    <string name="summary_pref_easytier_enabled">با دیتاپلین SOCKS5 داخلی به شبکه مش EasyTier وصل بی؛ CIDRهای شبکه مش با Xray مسیری دینی. برای اعمال تغییرات، اتصال دوباره راه اندازی بکن.</string>
+    <string name="title_pref_easytier_network_name">نام شبکه</string>
+    <string name="title_pref_easytier_network_secret">رمز شبکه</string>
+    <string name="title_pref_easytier_peers">گره‌ئون همتا</string>
+    <string name="title_pref_easytier_socks_port">پورت SOCKS5 ایزی‌تیر</string>
+    <string name="title_pref_easytier_route_cidrs">CIDRئون مسیری دین</string>
+    <string name="toast_invalid_easytier_socks_port">شماره پورت نامعتبره</string>
+    <string name="toast_easytier_settings_failed">ذخیره تنظیمات وی‌پی‌ان مش ناکام بمو</string>
     <string name="summary_network_switch">سرور تعیین‌شده سی Wi-Fi یا داده همراه به کار بره. موقع قطع شبکه یا توقف، خودکار شروع نیبو. انتخاب دستی تا عوض شدن شبکه می‌مونه. فقط سرور معمولی.</string>
     <string name="title_wifi_node">سرور Wi-Fi</string>
     <string name="title_cellular_node">سرور داده همراه</string>

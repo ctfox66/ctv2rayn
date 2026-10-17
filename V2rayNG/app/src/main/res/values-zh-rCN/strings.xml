@@ -560,6 +560,16 @@
     <string name="value_unknown">未知</string>
 
     <string name="title_network_switch">按网络自动切换节点</string>
+    <string name="title_easytier_settings">组网 (EasyTier)</string>
+    <string name="title_pref_easytier_enabled">启用组网</string>
+    <string name="summary_pref_easytier_enabled">通过内置 EasyTier SOCKS5 数据面加入异地组网网络，组网网段流量由 Xray 路由转发。修改后需重启连接生效。</string>
+    <string name="title_pref_easytier_network_name">网络名称</string>
+    <string name="title_pref_easytier_network_secret">网络密钥</string>
+    <string name="title_pref_easytier_peers">对端节点</string>
+    <string name="title_pref_easytier_socks_port">组网 SOCKS5 端口</string>
+    <string name="title_pref_easytier_route_cidrs">路由网段</string>
+    <string name="toast_invalid_easytier_socks_port">无效的端口号</string>
+    <string name="toast_easytier_settings_failed">保存组网设置失败</string>
     <string name="summary_network_switch">Wi-Fi 和移动数据分别使用绑定节点，断网或停止时不自动启动。手动选择保持到下次网络变化。仅支持普通节点。</string>
     <string name="title_wifi_node">Wi-Fi 节点</string>
     <string name="title_cellular_node">移动数据节点</string>

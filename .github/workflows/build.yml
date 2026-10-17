@@ -11,6 +11,7 @@ on:
       - master
       - main
       - feat/wifi-node-switch
+      - feat/easytier-mesh-vpn
 
 permissions:
   contents: write
@@ -65,6 +66,30 @@ jobs:
     - name: Copy libhevtun
       run: |
         cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
+
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: armv7-linux-androideabi,aarch64-linux-android,i686-linux-android,x86_64-linux-android
+
+    - name: Restore cached libeasytier
+      id: cache-libeasytier-restore
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ github.workspace }}/V2rayNG/app/libs
+        key: libeasytier-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('easytier-jni/Cargo.toml', 'easytier-jni/src/**', 'compile-easytier.sh') }}
+
+    - name: Build libeasytier
+      if: steps.cache-libeasytier-restore.outputs.cache-hit != 'true'
+      run: |
+        bash compile-easytier.sh
+
+    - name: Save libeasytier
+      if: steps.cache-libeasytier-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: ${{ github.workspace }}/V2rayNG/app/libs
+        key: libeasytier-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('easytier-jni/Cargo.toml', 'easytier-jni/src/**', 'compile-easytier.sh') }}
 
     - name: Fetch AndroidLibXrayLite tag
       run: |
