@@ -15,7 +15,6 @@ const CLASS_PATH: &str = "com/v2ray/ang/service/EasyTierManager";
 const RUNNER_INSTANCE_NAME: &str = "v2rayNG";
 
 static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
-static JAVA_VM: OnceLock<JavaVM> = OnceLock::new();
 static INSTANCE: Mutex<Option<Arc<NativeCoreInstance>>> = Mutex::new(None);
 
 struct JniSocketProtector {
@@ -54,7 +53,6 @@ impl NativeSocketProtector for JniSocketProtector {
 
 fn install_socket_protector(env: &mut JNIEnv) -> anyhow::Result<()> {
     let java_vm = env.get_java_vm()?;
-    let _ = JAVA_VM.set(java_vm.clone());
     set_native_socket_protector(Some(Arc::new(JniSocketProtector { java_vm })));
     Ok(())
 }
