@@ -40,7 +40,9 @@ fi
 # com.v2ray.ang.service.EasyTierManager for the no-tun SOCKS5 dataplane.
 mkdir -p "$__dir/V2rayNG/app/libs"
 for abi in $ABIS; do
-  cargo ndk -t "$abi" build --release -p easytier-jni --manifest-path "$__dir/easytier-jni/Cargo.toml" --target-dir "$TMPDIR/target"
+  # cargo-ndk runs `cargo metadata` in the working directory, so build from
+  # inside the crate instead of passing --manifest-path from the repo root.
+  (cd "$__dir/easytier-jni" && cargo ndk -t "$abi" build --release --target-dir "$TMPDIR/target")
   rust_target="${TARGET_MAP[$abi]}"
   mkdir -p "$__dir/V2rayNG/app/libs/$abi"
   cp "$TMPDIR/target/$rust_target/release/libeasytier.so" "$__dir/V2rayNG/app/libs/$abi/"
