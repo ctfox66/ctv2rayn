@@ -17,7 +17,10 @@ clear_tmp () {
 }
 trap 'echo -e "Aborted, error $? in command: $BASH_COMMAND"; trap ERR; clear_tmp; exit 1' ERR INT
 
-ABIS="armeabi-v7a arm64-v8a x86 x86_64"
+# Allow overriding the ABI set, e.g. EASYTIER_ABIS="arm64-v8a" for faster CI
+# runs. The v2rayNG APK still ships all splits; ABIs without libeasytier.so
+# simply keep EasyTier disabled (EasyTierManager catches the load failure).
+ABIS="${EASYTIER_ABIS:-armeabi-v7a arm64-v8a x86 x86_64}"
 
 declare -A TARGET_MAP
 TARGET_MAP["armeabi-v7a"]="armv7-linux-androideabi"
