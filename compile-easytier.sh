@@ -36,6 +36,17 @@ if ! command -v cargo-ndk &> /dev/null && ! cargo ndk --version &> /dev/null; th
   cargo install cargo-ndk
 fi
 
+# easytier-proto's build script requires protoc. Fetch a standalone binary when
+# the host does not provide one, so the script works on CI runners and dev boxes
+# without root access.
+if ! command -v protoc &>/dev/null; then
+  PROTOC_VERSION=25.3
+  curl -fsSL -o "$TMPDIR/protoc.zip" \
+    "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip"
+  unzip -q -o "$TMPDIR/protoc.zip" -d "$TMPDIR/protoc"
+  export PROTOC="$TMPDIR/protoc/bin/protoc"
+fi
+
 # The EasyTier library is loaded in-process by
 # com.v2ray.ang.service.EasyTierManager for the no-tun SOCKS5 dataplane.
 mkdir -p "$__dir/V2rayNG/app/libs"
