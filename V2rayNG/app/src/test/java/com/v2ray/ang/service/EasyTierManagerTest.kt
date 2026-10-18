@@ -76,4 +76,81 @@ class EasyTierManagerTest {
         assertTrue(toml.contains("network_name = \"ne\\\"t\""))
         assertTrue(toml.contains("network_secret = \"se\\\\cret\""))
     }
+
+    @Test
+    fun testBuildConfigTomlDefaultsKeepLegacyShape() {
+        val toml = EasyTierManager.buildConfigToml(
+            networkName = "net",
+            networkSecret = "",
+            peers = emptyList(),
+            socksPort = 10833,
+            ipv6Enabled = false
+        )
+        assertTrue(toml.contains("dhcp = true"))
+        assertFalse(toml.contains("hostname ="))
+        assertFalse(toml.contains("ipv4 ="))
+        assertTrue(toml.contains("default_protocol = \"tcp\""))
+    }
+
+    @Test
+    fun testBuildConfigTomlHostnameAndStaticAddress() {
+        val toml = EasyTierManager.buildConfigToml(
+            networkName = "net",
+            networkSecret = "",
+            peers = emptyList(),
+            socksPort = 10833,
+            ipv6Enabled = false,
+            hostname = "my-phone",
+            dhcpEnabled = false,
+            staticIpv4 = "10.144.144.1/24",
+            defaultProtocol = "udp"
+        )
+        assertTrue(toml.contains("hostname = \"my-phone\""))
+        assertTrue(toml.contains("dhcp = false"))
+        assertTrue(toml.contains("ipv4 = \"10.144.144.1/24\""))
+        assertTrue(toml.contains("default_protocol = \"udp\""))
+    }
+
+    @Test
+    fun testBuildConfigTomlStaticAddressIgnoredWithDhcp() {
+        val toml = EasyTierManager.buildConfigToml(
+            networkName = "net",
+            networkSecret = "",
+            peers = emptyList(),
+            socksPort = 10833,
+            ipv6Enabled = false,
+            dhcpEnabled = true,
+            staticIpv4 = "10.144.144.1/24"
+        )
+        assertFalse(toml.contains("ipv4 ="))
+    }
+
+    @Test
+    fun testEncodePeersTrimsAndFilters() {
+        val encoded = EasyTierManager.encodePeers(listOf(" tcp://a:1 ", "", "  "))
+        assertEquals("[\"tcp://a:1\"]", encoded)
+    }
+
+    @Test
+    fun testDecodePeersRoundTrip() {
+        val peers = listOf("tcp://a:1", "udp://b:2")
+        val decoded = EasyTierManager.decodePeers(EasyTierManager.encodePeers(peers))
+        assertEquals(peers, decoded)
+    }
+
+    @Test
+    fun testDecodePeersLegacySeparatedFormat() {
+        val legacy = "tcp://a:1,udp://b:2\ntcp://c:3;udp://d:4"
+        assertEquals(
+            listOf("tcp://a:1", "udp://b:2", "tcp://c:3", "udp://d:4"),
+            EasyTierManager.decodePeers(legacy)
+        )
+    }
+
+    @Test
+    fun testDecodePeersEmpty() {
+        assertTrue(EasyTierManager.decodePeers(null).isEmpty())
+        assertTrue(EasyTierManager.decodePeers("").isEmpty())
+        assertTrue(EasyTierManager.decodePeers("   ").isEmpty())
+    }
 }

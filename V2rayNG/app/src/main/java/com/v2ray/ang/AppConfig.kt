@@ -91,6 +91,10 @@ object AppConfig {
     const val PREF_EASYTIER_PEERS = "pref_easytier_peers"
     const val PREF_EASYTIER_SOCKS_PORT = "pref_easytier_socks_port"
     const val PREF_EASYTIER_ROUTE_CIDRS = "pref_easytier_route_cidrs"
+    const val PREF_EASYTIER_HOSTNAME = "pref_easytier_hostname"
+    const val PREF_EASYTIER_DHCP = "pref_easytier_dhcp"
+    const val PREF_EASYTIER_STATIC_IPV4 = "pref_easytier_static_ipv4"
+    const val PREF_EASYTIER_DEFAULT_PROTOCOL = "pref_easytier_default_protocol"
     const val PREF_HEV_TUNNEL_LOGLEVEL = "pref_hev_tunnel_loglevel"
     const val PREF_HEV_TUNNEL_RW_TIMEOUT = "pref_hev_tunnel_rw_timeout_v2"
     const val PREF_UPDATE_SUBSCRIPTION = "pref_update_subscription"
@@ -175,6 +179,7 @@ object AppConfig {
     const val PORT_EASYTIER_SOCKS5 = "10833"
     const val EASYTIER_OUTBOUND_TAG = "easytier"
     const val EASYTIER_DEFAULT_ROUTE_CIDRS = "10.0.0.0/8"
+    const val EASYTIER_DEFAULT_PROTOCOL = "tcp"
     const val WIREGUARD_LOCAL_ADDRESS_V4 = "172.16.0.2/32"
     const val WIREGUARD_LOCAL_ADDRESS_V6 = "2606:4700:110:8f81:d551:a0:532e:a2b3/128"
     const val WIREGUARD_LOCAL_MTU = "1420"
@@ -203,10 +208,12 @@ object AppConfig {
     const val MSG_MEASURE_DELAY_RESULT = 61
     const val MSG_MEASURE_DELAY_CANCEL = 62
     const val MSG_MEASURE_CONFIG_START = 7
+    const val MSG_EASYTIER_STATUS_REQUEST = 8
     const val MSG_MEASURE_CONFIG_CANCEL = 71
     const val MSG_MEASURE_CONFIG_SUCCESS = 72
     const val MSG_MEASURE_CONFIG_NOTIFY = 73
     const val MSG_MEASURE_CONFIG_FINISH = 74
+    const val MSG_EASYTIER_STATUS = 80
 
     const val MSG_SUB_UPDATE_START = 8
     const val MSG_SUB_UPDATE_CANCEL = 81

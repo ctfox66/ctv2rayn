@@ -65,7 +65,6 @@ class SettingsActivity : BaseComponentActivity() {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 viewModel.refreshSystemVpnSettingsAvailability()
                 viewModel.refreshNetworkSettings()
-                viewModel.refreshEasyTierSettings()
             }
         }
     }
@@ -108,7 +107,6 @@ fun SettingsScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val systemVpnSettingsAvailable by viewModel.systemVpnSettingsAvailable.collectAsStateWithLifecycle()
     val networkSettings by viewModel.networkSettings.collectAsStateWithLifecycle()
-    val easyTierSettings by viewModel.easyTierSettings.collectAsStateWithLifecycle()
     var uiSettingsExpanded by rememberSaveable { mutableStateOf(true) }
     var vpnSettingsExpanded by rememberSaveable { mutableStateOf(true) }
     var coreSettingsExpanded by rememberSaveable { mutableStateOf(true) }
@@ -117,7 +115,6 @@ fun SettingsScreen(
     var observatorySettingsExpanded by rememberSaveable { mutableStateOf(false) }
     var advancedSettingsExpanded by rememberSaveable { mutableStateOf(true) }
     var modeSettingsExpanded by rememberSaveable { mutableStateOf(true) }
-    var easyTierSettingsExpanded by rememberSaveable { mutableStateOf(false) }
 
     var localDns by rememberMmkvBool(AppConfig.PREF_LOCAL_DNS_ENABLED, false)
     var fakeDns by rememberMmkvBool(AppConfig.PREF_FAKE_DNS_ENABLED, false)
@@ -241,12 +238,6 @@ fun SettingsScreen(
                 .verticalScroll(scrollState)
         ) {
             NetworkSwitchSettings(networkSettings, viewModel::onNetworkSettingsAction)
-            EasyTierSettingsSection(
-                state = easyTierSettings,
-                expanded = easyTierSettingsExpanded,
-                onExpandedChange = { easyTierSettingsExpanded = it },
-                onAction = viewModel::onEasyTierSettingsAction
-            )
             CollapsiblePreferenceGroupHeader(
                 title = stringResource(R.string.title_ui_settings),
                 expanded = uiSettingsExpanded,

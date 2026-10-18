@@ -162,3 +162,89 @@ pub extern "system" fn Java_com_v2ray_ang_service_EasyTierManager_easyTierGetIns
         Err(_) => std::ptr::null_mut(),
     }
 }
+
+fn build_status_json(instance: &Arc<NativeCoreInstance>) -> String {
+    let runtime = match RUNTIME.get() {
+        Some(runtime) => runtime,
+        None => return serde_json::json!({ "running": false }).to_string(),
+    };
+    runtime.block_on(async {
+        let peer_manager = instance.peer_manager();
+        let my_peer_id = peer_manager.my_peer_id();
+        let routes = peer_manager.list_route_snapshots().await;
+        let peers = peer_manager.list_peer_snapshots().await;
+
+        let mut node = serde_json::json!({ "peerId": my_peer_id });
+        let mut peer_entries = Vec::new();
+        for route in &routes {
+            let ipv4 = route
+                .ipv4_addr
+                .as_ref()
+                .and_then(|inet| inet.address.as_ref())
+                .map(|addr| addr.to_string());
+            if route.peer_id == my_peer_id {
+                node = serde_json::json!({
+                    "peerId": my_peer_id,
+                    "hostname": route.hostname,
+                    "ipv4": ipv4,
+                    "version": route.version,
+                });
+                continue;
+            }
+            let mut rx_bytes = 0u64;
+            let mut tx_bytes = 0u64;
+            let mut tunnel_type: Option<String> = None;
+            if let Some(snapshot) = peers.iter().find(|p| p.peer_id == route.peer_id) {
+                for conn in &snapshot.conns {
+                    if conn.is_closed {
+                        continue;
+                    }
+                    if let Some(stats) = conn.stats.as_ref() {
+                        rx_bytes += stats.rx_bytes;
+                        tx_bytes += stats.tx_bytes;
+                    }
+                    if tunnel_type.is_none() {
+                        tunnel_type = conn.tunnel.as_ref().map(|t| t.tunnel_type.clone());
+                    }
+                }
+            }
+            peer_entries.push(serde_json::json!({
+                "peerId": route.peer_id,
+                "hostname": route.hostname,
+                "ipv4": ipv4,
+                "cost": route.cost,
+                "latencyMs": route.path_latency,
+                "rxBytes": rx_bytes,
+                "txBytes": tx_bytes,
+                "tunnelType": tunnel_type,
+            }));
+        }
+        serde_json::json!({
+            "running": instance.state() == CoreInstanceState::Running,
+            "version": easytier::VERSION,
+            "networkName": peer_manager.network_name(),
+            "node": node,
+            "peers": peer_entries,
+        })
+        .to_string()
+    })
+}
+
+#[no_mangle]
+pub extern "system" fn Java_com_v2ray_ang_service_EasyTierManager_easyTierGetStatusJson(
+    env: JNIEnv,
+    _class: JClass,
+) -> jstring {
+    logger::init();
+    let guard = INSTANCE
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let status = match guard.as_ref() {
+        Some(instance) => build_status_json(instance),
+        None => serde_json::json!({ "running": false }).to_string(),
+    };
+    match env.new_string(status) {
+        Ok(s) => s.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}

@@ -19,6 +19,7 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.enums.RoutingType
 import com.v2ray.ang.enums.VpnInterfaceAddressConfig
 import com.v2ray.ang.extension.moveItem
+import com.v2ray.ang.service.EasyTierManager
 import com.v2ray.ang.handler.MmkvManager.decodeAllServerList
 import com.v2ray.ang.handler.MmkvManager.decodeServerConfig
 import com.v2ray.ang.handler.MmkvManager.decodeSubsList
@@ -449,11 +450,7 @@ object SettingsManager {
     }
 
     fun getEasyTierPeers(): List<String> {
-        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_PEERS)
-            .orEmpty()
-            .split('\n', ',', ';')
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
+        return EasyTierManager.decodePeers(MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_PEERS))
     }
 
     fun getEasyTierSocksPort(): Int {
@@ -470,6 +467,30 @@ object SettingsManager {
         return raw.split(',', '\n', ';')
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+    }
+
+    /** Hostname advertised in the mesh; falls back to the device model. */
+    fun getEasyTierHostname(): String {
+        val stored = MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_HOSTNAME).orEmpty().trim()
+        return stored.ifBlank { Build.MODEL }
+    }
+
+    fun getEasyTierHostnameInput(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_HOSTNAME).orEmpty().trim()
+    }
+
+    fun isEasyTierDhcpEnabled(): Boolean {
+        return MmkvManager.decodeSettingsBool(AppConfig.PREF_EASYTIER_DHCP, true)
+    }
+
+    fun getEasyTierStaticIpv4(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_STATIC_IPV4).orEmpty().trim()
+    }
+
+    fun getEasyTierDefaultProtocol(): String {
+        return MmkvManager.decodeSettingsString(AppConfig.PREF_EASYTIER_DEFAULT_PROTOCOL)
+            ?.takeIf { it.isNotBlank() }
+            ?: AppConfig.EASYTIER_DEFAULT_PROTOCOL
     }
 
     /**

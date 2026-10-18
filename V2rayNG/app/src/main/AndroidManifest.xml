@@ -127,6 +127,10 @@
             android:name=".ui.settings.SettingsActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.easytier.EasyTierActivity"
+            android:exported="false"
+            android:windowSoftInputMode="stateUnchanged|adjustResize" />
+        <activity
             android:name=".ui.perappproxy.PerAppProxyActivity"
             android:exported="false" />
         <activity

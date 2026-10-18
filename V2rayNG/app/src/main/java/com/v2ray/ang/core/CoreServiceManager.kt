@@ -49,6 +49,8 @@ import java.net.InetSocketAddress
 
 object CoreServiceManager {
 
+    private const val EASYTIER_STATUS_POLL_INTERVAL = 5000L
+
     private val coreController: CoreController = CoreNativeManager.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
     private var currentConfig: ProfileItem? = null
@@ -62,6 +64,7 @@ object CoreServiceManager {
     private var networkGeneration = 0L
     private var runningGuid: String? = null
     private val connectionTestScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var easyTierStatusScope: CoroutineScope? = null
 
     @Volatile
     private var isReloading = false
@@ -142,6 +145,37 @@ object CoreServiceManager {
         EasyTierManager.start()
         launchCore(service, vpnInterface)
         startNetworkMonitor(service)
+        startEasyTierStatusPolling(service)
+    }
+
+    /**
+     * Publishes the EasyTier status to the UI while the dataplane is enabled.
+     * The polling coroutine is owned by the core lifecycle scope and cancelled
+     * in [stopCoreLoop], so no native query can run after teardown.
+     */
+    private fun startEasyTierStatusPolling(service: Service) {
+        if (easyTierStatusScope != null) return
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        easyTierStatusScope = scope
+        scope.launch {
+            while (true) {
+                if (!SettingsManager.isEasyTierEnabled()) {
+                    delay(EASYTIER_STATUS_POLL_INTERVAL)
+                    continue
+                }
+                broadcastEasyTierStatus(service)
+                delay(EASYTIER_STATUS_POLL_INTERVAL)
+            }
+        }
+    }
+
+    private fun broadcastEasyTierStatus(service: Service) {
+        MessageHelper.sendMsg2UI(service, AppConfig.MSG_EASYTIER_STATUS, EasyTierManager.getStatusJsonSafe())
+    }
+
+    private fun stopEasyTierStatusPolling() {
+        easyTierStatusScope?.cancel()
+        easyTierStatusScope = null
     }
 
     @Throws(Exception::class)
@@ -215,6 +249,7 @@ object CoreServiceManager {
      */
     fun stopCoreLoop(): Boolean {
         connectionTestScope.coroutineContext.cancelChildren()
+        stopEasyTierStatusPolling()
         EasyTierManager.stop()
         val service = getService() ?: return false
 
@@ -569,6 +604,10 @@ object CoreServiceManager {
                 AppConfig.MSG_MEASURE_DELAY -> {
                     if (isOrderedBroadcast) resultCode = Activity.RESULT_OK
                     measureV2rayDelay(intent.getStringExtra("content").orEmpty())
+                }
+
+                AppConfig.MSG_EASYTIER_STATUS_REQUEST -> {
+                    broadcastEasyTierStatus(serviceControl.getService())
                 }
             }
 
