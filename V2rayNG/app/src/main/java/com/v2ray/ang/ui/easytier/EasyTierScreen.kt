@@ -55,7 +55,6 @@ fun EasyTierScreen(
 ) {
     val config by viewModel.config.collectAsStateWithLifecycle()
     val status by viewModel.status.collectAsStateWithLifecycle()
-    val statusReceived by viewModel.statusReceived.collectAsStateWithLifecycle()
     var selectedTab by rememberSaveable { mutableStateOf(0) }
 
     Scaffold(
@@ -90,7 +89,7 @@ fun EasyTierScreen(
             }
             when (selectedTab) {
                 0 -> ConfigTab(config = config, onAction = viewModel::onConfigAction)
-                else -> StatusTab(status = status, statusReceived = statusReceived)
+                else -> StatusTab(status = status)
             }
         }
     }
@@ -279,8 +278,7 @@ private fun PeerListSection(
 
 @Composable
 private fun StatusTab(
-    status: EasyTierStatus,
-    statusReceived: Boolean
+    status: EasyTierStatus
 ) {
     val scrollState = rememberScrollState()
 
@@ -350,15 +348,6 @@ private fun StatusTab(
                     AppDivider()
                 }
             }
-        }
-
-        if (!statusReceived) {
-            Text(
-                text = stringResource(R.string.easytier_not_running_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
-            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))

@@ -28,16 +28,11 @@ class EasyTierViewModel(application: Application) : BaseViewModel(application) {
     private val _status = MutableStateFlow(EasyTierStatus())
     val status = _status.asStateFlow()
 
-    /** True once the daemon has delivered at least one status payload. */
-    private val _statusReceived = MutableStateFlow(false)
-    val statusReceived = _statusReceived.asStateFlow()
-
     private val statusReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.getIntExtra("key", 0) != AppConfig.MSG_EASYTIER_STATUS) return
             val json = intent.getStringExtra("content") ?: return
             _status.value = EasyTierStatus.fromJson(json)
-            _statusReceived.value = true
         }
     }
 
