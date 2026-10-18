@@ -185,11 +185,23 @@ fn build_status_json(instance: &Arc<NativeCoreInstance>) -> String {
     };
     runtime.block_on(async {
         let peer_manager = instance.peer_manager();
-        let my_peer_id = peer_manager.my_peer_id();
         let routes = peer_manager.list_route_snapshots().await;
         let peers = peer_manager.list_peer_snapshots().await;
 
-        let mut node = serde_json::json!({ "peerId": my_peer_id });
+        // The local node info comes from the instance snapshot, mirroring the
+        // official management RPC. The OSPF route table may not carry the
+        // local row (or its address) while DHCP assignment is in flight.
+        let node_snapshot = instance.node_snapshot().await;
+        let mut node = serde_json::json!({
+            "peerId": serde_json::to_value(node_snapshot.peer_id).unwrap_or(serde_json::json!(null)),
+            "hostname": node_snapshot.hostname,
+            "ipv4": node_snapshot
+                .ipv4_addr
+                .as_ref()
+                .and_then(|inet| inet.address.as_ref())
+                .map(|addr| addr.to_string()),
+            "version": node_snapshot.version,
+        });
         let mut peer_entries = Vec::new();
         for route in &routes {
             let ipv4 = route
@@ -197,15 +209,6 @@ fn build_status_json(instance: &Arc<NativeCoreInstance>) -> String {
                 .as_ref()
                 .and_then(|inet| inet.address.as_ref())
                 .map(|addr| addr.to_string());
-            if route.peer_id == my_peer_id {
-                node = serde_json::json!({
-                    "peerId": my_peer_id,
-                    "hostname": route.hostname,
-                    "ipv4": ipv4,
-                    "version": route.version,
-                });
-                continue;
-            }
             let mut rx_bytes = 0u64;
             let mut tx_bytes = 0u64;
             let mut tunnel_type: Option<String> = None;
