@@ -26,6 +26,8 @@ features = [
     "socks5",
     "tcp-hole-punch",
     "endpoint-discovery",
+    "aes-gcm",
+    "dhcp-ipv4",
 ]
 
 [dependencies.easytier-core]
