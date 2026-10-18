@@ -5,8 +5,8 @@ use easytier::common::config::TomlConfigLoader;
 use easytier::instance::factory::{create_native_instance, NativeCoreInstance};
 use easytier::socket_protector::{set_native_socket_protector, NativeSocketProtector};
 use easytier_core::instance::CoreInstanceState;
-use jni::objects::{JClass, JString, JValue};
-use jni::sys::{jboolean, jstring, JNI_FALSE, JNI_TRUE};
+use jni::objects::{GlobalRef, JClass, JString, JValue};
+use jni::sys::{jboolean, jclass, jstring, JNI_FALSE, JNI_TRUE};
 use jni::{JNIEnv, JavaVM};
 
 mod logger;
@@ -16,6 +16,10 @@ const RUNNER_INSTANCE_NAME: &str = "v2rayNG";
 
 static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 static INSTANCE: Mutex<Option<Arc<NativeCoreInstance>>> = Mutex::new(None);
+// Native worker threads have no app classloader context, so FindClass there only
+// sees the system loader. The class is resolved once on the Java calling thread
+// and cached as a global reference for reuse from the socket protector callback.
+static MANAGER_CLASS: OnceLock<GlobalRef> = OnceLock::new();
 
 struct JniSocketProtector {
     java_vm: JavaVM,
@@ -27,16 +31,24 @@ impl NativeSocketProtector for JniSocketProtector {
         let fd = i32::try_from(socket_handle).map_err(|_| {
             io::Error::new(io::ErrorKind::InvalidInput, "socket handle out of range")
         })?;
+        let global_class = MANAGER_CLASS.get().ok_or_else(|| {
+            io::Error::other("EasyTierManager class reference not cached yet")
+        })?;
+        // SAFETY: the raw jclass borrows from `global_class`, which is a
+        // process-lifetime GlobalRef created on the Java calling thread.
+        let class = unsafe { JClass::from_raw(global_class.as_obj().as_raw() as jclass) };
         let mut env = self
             .java_vm
             .attach_current_thread()
             .map_err(|e| io::Error::other(format!("attach jvm thread failed: {e}")))?;
-        let class = env
-            .find_class(CLASS_PATH)
-            .map_err(|e| io::Error::other(format!("find {CLASS_PATH} failed: {e}")))?;
         let result = env
             .call_static_method(class, "protectSocket", "(I)Z", &[JValue::from(fd)])
-            .map_err(|e| io::Error::other(format!("call protectSocket failed: {e}")))?;
+            .map_err(|e| {
+                // A failed call leaves a pending JVM exception on this attached
+                // thread; clear it before returning so detach does not abort.
+                let _ = env.exception_clear();
+                io::Error::other(format!("call protectSocket failed: {e}"))
+            })?;
         let ok = result
             .z()
             .map_err(|e| io::Error::other(format!("read protectSocket result failed: {e}")))?;
@@ -53,6 +65,9 @@ impl NativeSocketProtector for JniSocketProtector {
 
 fn install_socket_protector(env: &mut JNIEnv) -> anyhow::Result<()> {
     let java_vm = env.get_java_vm()?;
+    let class = env.find_class(CLASS_PATH)?;
+    let global_class = env.new_global_ref(class)?;
+    let _ = MANAGER_CLASS.set(global_class);
     set_native_socket_protector(Some(Arc::new(JniSocketProtector { java_vm })));
     Ok(())
 }
