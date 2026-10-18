@@ -198,8 +198,7 @@ fn build_status_json(instance: &Arc<NativeCoreInstance>) -> String {
             "ipv4": node_snapshot
                 .ipv4_addr
                 .as_ref()
-                .and_then(|inet| inet.address.as_ref())
-                .map(|addr| addr.to_string()),
+                .map(|inet| inet.address().to_string()),
             "version": node_snapshot.version,
         });
         let mut peer_entries = Vec::new();
