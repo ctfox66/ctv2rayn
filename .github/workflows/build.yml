@@ -70,19 +70,19 @@ jobs:
     - name: Setup Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
-        targets: aarch64-linux-android
+        targets: aarch64-linux-android, x86_64-linux-android
 
     - name: Restore cached libeasytier
       id: cache-libeasytier-restore
       uses: actions/cache/restore@v6
       with:
         path: ${{ github.workspace }}/V2rayNG/app/libs
-        key: libeasytier-${{ runner.os }}-${{ env.NDK_HOME }}-arm64-${{ hashFiles('easytier-jni/Cargo.toml', 'easytier-jni/src/**', 'compile-easytier.sh') }}
+        key: libeasytier-${{ runner.os }}-${{ env.NDK_HOME }}-arm64-x86_64-${{ hashFiles('easytier-jni/Cargo.toml', 'easytier-jni/src/**', 'compile-easytier.sh') }}
 
     - name: Build libeasytier
       if: steps.cache-libeasytier-restore.outputs.cache-hit != 'true'
       env:
-        EASYTIER_ABIS: arm64-v8a
+        EASYTIER_ABIS: arm64-v8a x86_64
       run: |
         bash compile-easytier.sh
 
@@ -91,7 +91,7 @@ jobs:
       uses: actions/cache/save@v6
       with:
         path: ${{ github.workspace }}/V2rayNG/app/libs
-        key: libeasytier-${{ runner.os }}-${{ env.NDK_HOME }}-arm64-${{ hashFiles('easytier-jni/Cargo.toml', 'easytier-jni/src/**', 'compile-easytier.sh') }}
+        key: libeasytier-${{ runner.os }}-${{ env.NDK_HOME }}-arm64-x86_64-${{ hashFiles('easytier-jni/Cargo.toml', 'easytier-jni/src/**', 'compile-easytier.sh') }}
 
     - name: Fetch AndroidLibXrayLite tag
       run: |
