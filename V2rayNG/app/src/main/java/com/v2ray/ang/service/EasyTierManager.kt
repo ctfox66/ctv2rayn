@@ -263,19 +263,17 @@ object EasyTierManager {
         if (!dhcpEnabled && staticIpv4.isNotBlank()) {
             appendLine("ipv4 = \"${escapeToml(staticIpv4)}\"")
         }
+        appendLine("listeners = []")
+        appendLine("socks5_proxy = \"socks5://${AppConfig.LOOPBACK}:$socksPort\"")
         appendLine()
         appendLine("[network_identity]")
         appendLine("network_name = \"${escapeToml(networkName)}\"")
         appendLine("network_secret = \"${escapeToml(networkSecret)}\"")
-        appendLine()
-        appendLine("listeners = []")
         peers.forEach { peer ->
             appendLine()
             appendLine("[[peer]]")
             appendLine("uri = \"${escapeToml(peer)}\"")
         }
-        appendLine()
-        appendLine("socks5_proxy = \"socks5://${AppConfig.LOOPBACK}:$socksPort\"")
         appendLine()
         appendLine("[flags]")
         appendLine("no_tun = true")

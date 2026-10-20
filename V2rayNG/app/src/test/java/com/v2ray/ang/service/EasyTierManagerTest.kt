@@ -99,6 +99,23 @@ class EasyTierManagerTest {
     }
 
     @Test
+    fun testBuildConfigTomlRootKeysBeforePeerTables() {
+        val toml = EasyTierManager.buildConfigToml(
+            networkName = "net1",
+            networkSecret = "secret1",
+            peers = listOf("tcp://1.2.3.4:11010", "udp://5.6.7.8:11010"),
+            socksPort = 10833,
+            ipv6Enabled = false
+        )
+        val peerHeader = toml.indexOf("[[peer]]")
+        val socks5Line = toml.indexOf("socks5_proxy =")
+        val listenersLine = toml.indexOf("listeners =")
+        assertTrue(socks5Line in 0 until peerHeader, "socks5_proxy must be a root key declared before [[peer]] tables")
+        assertTrue(listenersLine in 0 until peerHeader, "listeners must be a root key declared before [[peer]] tables")
+        assertTrue(socks5Line < toml.indexOf("[network_identity]"), "socks5_proxy must not belong to [network_identity]")
+    }
+
+    @Test
     fun testBuildConfigTomlNoPeers() {
         val toml = EasyTierManager.buildConfigToml(
             networkName = "net",
