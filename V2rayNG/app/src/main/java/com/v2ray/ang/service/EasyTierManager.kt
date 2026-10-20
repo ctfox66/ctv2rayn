@@ -5,6 +5,7 @@ import com.v2ray.ang.core.CoreServiceManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
+import com.google.gson.JsonObject
 
 /**
  * Loads and controls the embedded EasyTier mesh VPN dataplane.
@@ -14,7 +15,14 @@ import com.v2ray.ang.util.LogUtil
  */
 object EasyTierManager {
 
+    private const val MESH_IPV4_WAIT_INTERVAL_MS = 200L
+    private const val MESH_IPV4_WAIT_TIMEOUT_MS = 4000L
+
     private var libraryLoaded = false
+
+    /** Mesh IPv4 addresses (own node plus connected peers) seen after the last start. */
+    @Volatile
+    private var cachedMeshIpv4s: List<String> = emptyList()
 
     @JvmStatic
     external fun easyTierStart(toml: String): Boolean
@@ -79,6 +87,7 @@ object EasyTierManager {
 
     /** Stops the EasyTier dataplane. Safe to call when it is not running. */
     fun stop() {
+        cachedMeshIpv4s = emptyList()
         if (!libraryLoaded) {
             return
         }
@@ -112,6 +121,88 @@ object EasyTierManager {
             libraryLoaded = true
         }
     }
+
+    /**
+     * Waits a bounded interval for the mesh to assign this node an IPv4 address
+     * after [start], then caches the node and peer addresses for
+     * [effectiveRouteCidrs]. Skipped for static-IP configs (address already
+     * known) and peer-less configs (no DHCP server can answer), so those starts
+     * never block. Runs on the daemon IO thread before the Xray config is built.
+     */
+    fun awaitMeshIpv4s(timeoutMs: Long = MESH_IPV4_WAIT_TIMEOUT_MS) {
+        cachedMeshIpv4s = emptyList()
+        if (!libraryLoaded || !SettingsManager.isEasyTierEnabled()) {
+            return
+        }
+        if (!SettingsManager.isEasyTierDhcpEnabled()) {
+            return
+        }
+        if (SettingsManager.getEasyTierPeers().isEmpty()) {
+            return
+        }
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            val meshIpv4s = collectMeshIpv4s(getStatusJsonSafe())
+            if (meshIpv4s.isNotEmpty()) {
+                cachedMeshIpv4s = meshIpv4s
+                return
+            }
+            Thread.sleep(MESH_IPV4_WAIT_INTERVAL_MS)
+        }
+        LogUtil.w(AppConfig.TAG, "EasyTier mesh IPv4 wait timed out after ${timeoutMs}ms, using configured route CIDRs only")
+    }
+
+    /**
+     * Route CIDRs effective for the next core start: user-entered CIDRs merged
+     * with the /24 of the node's mesh address. DHCP configs use addresses
+     * discovered by [awaitMeshIpv4s]; static-IP configs derive it from the
+     * persisted address, so no runtime wait is required.
+     */
+    fun effectiveRouteCidrs(): List<String> {
+        val manual = SettingsManager.getEasyTierRouteCidrs()
+        val autoIpv4s = if (SettingsManager.isEasyTierDhcpEnabled()) {
+            cachedMeshIpv4s
+        } else {
+            SettingsManager.getEasyTierStaticIpv4().takeIf { it.isNotBlank() }?.let { listOf(it) } ?: emptyList()
+        }
+        return mergeRouteCidrs(manual, autoIpv4s)
+    }
+
+    /** Extracts the node IPv4 and connected peer IPv4 addresses from a status JSON. */
+    private fun collectMeshIpv4s(statusJson: String): List<String> {
+        return try {
+            val root = JsonUtil.parseString(statusJson) ?: return emptyList()
+            val own = root.get("node")?.takeIf { it.isJsonObject }?.asJsonObject
+                ?.get("ipv4")?.takeIf { it.isJsonPrimitive }?.asString
+                ?.takeIf { it.isNotBlank() }
+                ?: return emptyList()
+            val peerIps = root.get("peers")?.takeIf { it.isJsonArray }?.asJsonArray?.flatMap { element ->
+                (element as? JsonObject)?.get("ipv4")?.takeIf { it.isJsonPrimitive }?.asString
+                    ?.takeIf { it.isNotBlank() }?.let { listOf(it) } ?: emptyList()
+            }.orEmpty()
+            listOf(own) + peerIps
+        } catch (e: Exception) {
+            LogUtil.e(AppConfig.TAG, "EasyTier mesh IPv4 parse failed", e)
+            emptyList()
+        }
+    }
+
+    /** Derives the /24 network of a dotted IPv4 address; invalid input yields null. */
+    fun ipv4ToSlash24(ip: String): String? {
+        val parts = ip.trim().substringBefore('/').split('.')
+        if (parts.size != 4) {
+            return null
+        }
+        val octets = parts.map { it.toIntOrNull() ?: return null }
+        if (octets.any { it !in 0..255 }) {
+            return null
+        }
+        return "${octets[0]}.${octets[1]}.${octets[2]}.0/24"
+    }
+
+    /** Merges manual CIDRs with /24 networks derived from mesh addresses, deduplicated. */
+    fun mergeRouteCidrs(manual: List<String>, meshIpv4s: List<String>): List<String> =
+        (manual + meshIpv4s.mapNotNull(::ipv4ToSlash24)).distinct()
 
     fun escapeToml(value: String): String = buildString {
         for (ch in value) {

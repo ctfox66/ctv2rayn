@@ -143,6 +143,10 @@ object CoreServiceManager {
         }
         SettingsManager.getNetworkServer(wifi)?.let { MmkvManager.setSelectServer(it) }
         EasyTierManager.start()
+        // Bounded wait: the Xray routing rules embed the node's mesh /24, so the
+        // DHCP assignment must have a chance to land before the config is built.
+        // The wait is skipped (no blocking) for static-IP and peer-less configs.
+        EasyTierManager.awaitMeshIpv4s()
         launchCore(service, vpnInterface)
         startNetworkMonitor(service)
         startEasyTierStatusPolling(service)

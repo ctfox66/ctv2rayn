@@ -2,6 +2,7 @@ package com.v2ray.ang.service
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -27,6 +28,53 @@ class EasyTierManagerTest {
     @Test
     fun testEscapeTomlKeepsUnicode() {
         assertEquals("节点", EasyTierManager.escapeToml("节点"))
+    }
+
+    @Test
+    fun testIpv4ToSlash24PlainAddress() {
+        assertEquals("192.168.43.0/24", EasyTierManager.ipv4ToSlash24("192.168.43.3"))
+        assertEquals("10.126.126.0/24", EasyTierManager.ipv4ToSlash24("10.126.126.10"))
+    }
+
+    @Test
+    fun testIpv4ToSlash24StripsCidrSuffix() {
+        assertEquals("10.1.2.0/24", EasyTierManager.ipv4ToSlash24("10.1.2.3/24"))
+        assertEquals("10.1.2.0/24", EasyTierManager.ipv4ToSlash24(" 10.1.2.3/32 "))
+    }
+
+    @Test
+    fun testIpv4ToSlash24InvalidInputYieldsNull() {
+        assertNull(EasyTierManager.ipv4ToSlash24("256.1.1.1"))
+        assertNull(EasyTierManager.ipv4ToSlash24("1.2.3"))
+        assertNull(EasyTierManager.ipv4ToSlash24("1.2.3.4.5"))
+        assertNull(EasyTierManager.ipv4ToSlash24(""))
+        assertNull(EasyTierManager.ipv4ToSlash24("example.com"))
+        assertNull(EasyTierManager.ipv4ToSlash24("1.2.3.x"))
+    }
+
+    @Test
+    fun testMergeRouteCidrsMergesAndDedupes() {
+        val merged = EasyTierManager.mergeRouteCidrs(
+            manual = listOf("10.0.0.0/8", "192.168.43.0/24"),
+            meshIpv4s = listOf("10.126.126.2", "192.168.43.9")
+        )
+        assertEquals(listOf("10.0.0.0/8", "192.168.43.0/24", "10.126.126.0/24"), merged)
+    }
+
+    @Test
+    fun testMergeRouteCidrsSkipsInvalidMeshAddresses() {
+        val merged = EasyTierManager.mergeRouteCidrs(
+            manual = listOf("10.0.0.0/8"),
+            meshIpv4s = listOf("not-an-ip", "172.16.0.5")
+        )
+        assertEquals(listOf("10.0.0.0/8", "172.16.0.0/24"), merged)
+    }
+
+    @Test
+    fun testMergeRouteCidrsEmptyInputs() {
+        assertTrue(EasyTierManager.mergeRouteCidrs(emptyList(), emptyList()).isEmpty())
+        assertEquals(listOf("10.0.0.0/8"), EasyTierManager.mergeRouteCidrs(listOf("10.0.0.0/8"), emptyList()))
+        assertEquals(listOf("10.126.126.0/24"), EasyTierManager.mergeRouteCidrs(emptyList(), listOf("10.126.126.2")))
     }
 
     @Test

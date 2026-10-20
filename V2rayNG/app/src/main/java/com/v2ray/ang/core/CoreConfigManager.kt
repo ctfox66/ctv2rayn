@@ -16,6 +16,7 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.service.EasyTierManager
 import com.v2ray.ang.util.HttpUtil
 import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
@@ -47,7 +48,7 @@ object CoreConfigManager {
                 EasyTierOutboundBuilder.injectIntoV2rayConfig(
                     v2rayConfig,
                     SettingsManager.getEasyTierSocksPort(),
-                    SettingsManager.getEasyTierRouteCidrs()
+                    EasyTierManager.effectiveRouteCidrs()
                 )
             }
             return toConfigResult(configContext, v2rayConfig)
@@ -134,7 +135,7 @@ object CoreConfigManager {
             EasyTierOutboundBuilder.injectIntoJson(
                 json,
                 SettingsManager.getEasyTierSocksPort(),
-                SettingsManager.getEasyTierRouteCidrs()
+                EasyTierManager.effectiveRouteCidrs()
             )
         }
 
